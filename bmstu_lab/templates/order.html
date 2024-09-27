@@ -1,0 +1,28 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Заказ №{{ data.order.id }}{% endblock %}
+
+
+{% block content %}
+<div class="card">
+    <div class="header">
+        <h2 class="title">{{ data.vmachine.id }}</h2>
+        <div class="icon"></div>
+    </div>
+    <p class="description">
+        Для выполнения кода сервисов и приложений, размещения интернет-магазинов и развертывания тестовых сред.
+    </p>
+    <div class="specs">
+        <div class="spec"><strong>1 ядро</strong><br>vCPU</div>
+        <div class="spec"><strong>1 ГБ</strong><br>RAM</div>
+        <div class="spec"><strong>10 ГБ</strong><br>SSD</div>
+    </div>
+    <div class="price">
+        480 ₽/мес
+    </div>
+    <a href="#" class="button">Подробнее</a>
+</div>
+    <div>Информация о заказе №{{ data.order.id }}</div>
+    <div class="order-text">Информация о заказе №{{ data.order.id }}</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+
+ <div class="card">
+    <div class="image-container">
+        <img src={{ vmachine.url }} alt="image description">
+    </div>
+    <p class="description">
+        {{ vmachine.description }}
+    </p>
+    <div class="specs">
+        <div class="spec"><strong>{{ vmachine.vCPU }}</strong><br>vCPU</div>
+        <div class="spec"><strong>{{ vmachine.RAM }}</strong><br>RAM</div>
+        <div class="spec"><strong>{{ vmachine.SSD }}</strong><br>SSD</div>
+    </div>
+    <div class="price">
+        {{ vmachine.price }} ₽/мес
+    </div>
+    <a href="{% url 'vmachine_url' element.id %}" class="button">Подробнее</a>
+</div>

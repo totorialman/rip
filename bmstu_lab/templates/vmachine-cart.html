@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<main>
+    <section class="container">
+
+        <h1 class="vmachine-text2">Оформление заказа</h1>
+
+        <div class="cart-container2">
+            {% for item in items %}
+            <div class="cart-item-container">
+                <div class="image-container2">
+                    <img src="{{ item.url }}" alt="image description">
+                </div>
+                <div class="cart-item-details">
+                    <div class="item-name">{{ item.name }}</div>
+                    <div class="item-price">Цена: {{ item.price }} ₽/мес</div>
+                    <div class="item-quantity">Количество: {{ item.quantity }}</div>
+                    <div class="item-total">Итого: {{ item.total }} ₽/мес</div>
+                    
+                </div>
+            </div>
+            
+            {% endfor %}
+            
+            <form>
+                <label for="fullname" style="margin-top:20px">ФИО:</label><br>
+                <input type="text" id="fullname" name="fullname" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:15px;"><br>
+              
+                <label for="email">Почта:</label><br>
+                <input type="email" id="email" name="email" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:15px;"><br>
+                <!--<label for="birthdate">Дата:</label><br>
+                <input type="email" id="email" name="email" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;">-->
+              </form>
+              <div class="total-price">
+                Общая сумма: {{ total_price }} ₽/мес
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
