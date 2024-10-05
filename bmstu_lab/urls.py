@@ -1,5 +1,5 @@
 """
-URL configuration for bmstu_lab project.
+URL configuration for rent_server project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.2/topics/http/urls/
@@ -16,7 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from bmstu_lab import views
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.GetVmachines),
+    path('vmachine_max_price/<int:id>/', views.GetVmachines, name='vmachine_order_url'),
+    path('vmachine-cart/<int:id>/', views.GetVmachineOrder, name='vmachine_cart_url'),
+    
+    
+    
 ]

@@ -98,7 +98,7 @@ main {
 }
 
 /* Стили для контейнера корзины */
-.cart-container {
+.order-container {
   
   position: fixed; /* Фиксированное позиционирование */
   top: 10px; /* Отступ сверху */
@@ -106,7 +106,7 @@ main {
   z-index: 1000; /* Убедитесь, что корзина выше других элементов */
 }
 
-.cart-icon {
+.order-icon {
   position: relative;
   width: 40px; /* Ширина иконки */
   height: 40px; /* Высота иконки */
@@ -114,7 +114,7 @@ main {
   background-size: cover;
 }
 
-.cart-count {
+.order-count {
   position: absolute;
   top: -5px; /* Положение цифры относительно иконки */
   right: -5px; /* Положение цифры относительно иконки */
@@ -129,21 +129,21 @@ main {
   font-size: 12px; /* Размер шрифта цифры */
 }
 /* Стили для контейнера корзины */
-.cart-container {
+.order-container {
   position: fixed; /* Фиксированное позиционирование */
   top: 100px; /* Отступ сверху */
   right: 50px; /* Отступ справа */
   z-index: 1000; /* Убедитесь, что корзина выше других элементов */
 }
 
-.cart-icon {
+.order-icon {
   position: relative;
   width: 40px; /* Ширина иконки */
   height: 40px; /* Высота иконки */
 }
 
         /* Стили для корзины */
-        .cart-container2 {
+        .order-container2 {
           background-color: white;
   border-radius: 8px;
 
@@ -157,14 +157,14 @@ main {
             border-radius: 8px;
         }
 
-        .cart-item {
+        .order-item {
             display: flex;
             justify-content: space-between;
             padding: 1rem;
             border-bottom: 1px solid #ddd;
         }
 
-        .cart-item:last-child {
+        .order-item:last-child {
             border-bottom: none;
         }
 
@@ -188,12 +188,12 @@ main {
             margin-top: 1rem;
         }
  
-.cart-icon img {
+.order-icon img {
   width: 100%; /* Иконка растягивается на всю ширину контейнера */
   height: auto; /* Высота подстраивается автоматически */
 }
 
-.cart-count {
+.order-count {
   position: absolute;
   top: 10px; /* Положение цифры относительно иконки */
   right: -5px; /* Положение цифры относительно иконки */
@@ -408,7 +408,7 @@ main {
 }
 
 /* Стили для контейнера корзины */
-.cart-container2 {
+.order-container2 {
   background-color: white;
   border-radius: 8px;
   padding: 20px;
@@ -418,14 +418,14 @@ main {
 }
 
 /* Стили для контейнера корзины с изображением и деталями */
-.cart-item-container {
+.order-item-container {
   display: flex; /* Устанавливаем флекс-контейнер */
   align-items: center; /* Центрируем элементы по вертикали */
   border-bottom: 1px solid #ddd;
   padding: 1rem;
 }
 
-.cart-item-container:last-child {
+.order-item-container:last-child {
   border-bottom: none;
 }
 
@@ -440,7 +440,7 @@ main {
   border-radius: 8px; /* Закругленные углы изображения */
 }
 
-.cart-item-details {
+.order-item-details {
   flex-grow: 1; /* Позволяет элементам занять доступное пространство */
 }
 
@@ -451,6 +451,12 @@ main {
 .item-price, .item-quantity, .item-total {
   margin-bottom: 0.2rem;
 }
+
+.item-quantity{
+  margin-right: 50px;
+  text-align: right;
+}
+
 .item-total {
 margin-left: 140px;
 

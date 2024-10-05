@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-
+from .models import Vmachine_Service,Vmachine_Request
 from datetime import date 
 
 
@@ -20,42 +20,48 @@ data_vmachines = {
 
     }
 
-CARTS = {
+VMACHINES = {
     1: {'items': {1: 2, 8: 1},'id':1},
     2: {'items': {2: 1, 4: 3},'id':2},
     
 }
 
 def GetVmachines(request):
-    max_price_str = request.GET.get('max_price', '100000')  # Значение по умолчанию 100000
+    max_price_str = request.GET.get('vmachine_max_price', '100000')
 
     try:
         max_price = int(max_price_str)
     except ValueError:
-        max_price = 100000  # Если значение не удалось преобразовать, используем значение по умолчанию
+        max_price = 100000
 
-    # Функция для получения цены из строки или числа
-    def parse_price(price):
-        if isinstance(price, str):
-            try:
-                # Если цена строка, попробуем удалить возможные символы и преобразовать в число
-                return int(price.replace(' ', '').replace('₽/мес', '').replace(',', ''))
-            except ValueError:
-                return 0
-        elif isinstance(price, int):
-            return price
-        return 0
+    # Получаем услуги с фильтрацией по цене и статусу
+    filtered_vmachines = Vmachine_Service.objects.filter(price__lte=max_price, status='active')
 
-    # Фильтрация виртуальных машин по цене
-    filtered_vmachines = [vmachine for vmachine in data_vmachines['vmachines'] if parse_price(vmachine['price']) <= max_price]
+    # Проверка, аутентифицирован ли пользователь
+    if request.user.is_authenticated:
+        # Получаем текущую заявку пользователя (если она есть)
+        current_request = Vmachine_Request.objects.filter(creator=request.user, status='draft').first()
+
+        # Обработка для отображения количества услуг в текущей заявке
+        if current_request:
+            vmachine_order_count = current_request.vmachinerequestservice_set.count()
+        else:
+            vmachine_order_count = 0
+    else:
+        # Если пользователь не аутентифицирован
+        current_request = None
+        vmachine_order_count = 0
 
     context = {
         'vmachines': filtered_vmachines,
         'vmachines_max_price': max_price,
-        'vmachine_order_url': CARTS[1],
-        'vmachine_order_count': len(CARTS[1]['items'])
+        'current_request': current_request,  # Передаем текущую заявку в контекст
+        'vmachine_order_count': vmachine_order_count  # Количество услуг в черновике
     }
+
     return render(request, 'vmachines.html', context)
+
+
 def GetVmachine(request, id):
     
     vmachine = next((vmachine for vmachine in data_vmachines['vmachines'] if vmachine['id'] == id), None)
@@ -67,23 +73,23 @@ def GetVmachine(request, id):
         'data': {
             'vmachine': {'id': id},  
         },
-        'vmachine_order_url': CARTS[1],
-        'vmachine_order_count': len(CARTS[1]['items'])
+        'vmachine_order_url': VMACHINES[1],
+        'vmachine_order_count': len(VMACHINES[1]['items'])
     }
     
     return render(request, 'vmachine.html', context
     )
 def GetVmachineOrder(request, id):
     
-    cart = CARTS.get(id)
+    vmachine = VMACHINES.get(id)
     
-    if not cart:
+    if not vmachine:
         return HttpResponse('Корзина не найдена', status=404)
     
     
     items = []
     total_price = 0
-    for vm_id, quantity in cart['items'].items():
+    for vm_id, quantity in vmachine['items'].items():
         vmachine = next((vm for vm in data_vmachines['vmachines'] if vm['id'] == vm_id), None)
         if vmachine:
             vmachine_info = {

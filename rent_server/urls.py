@@ -22,10 +22,8 @@ from bmstu_lab import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.GetVmachines),
     path('vmachine/<int:id>/', views.GetVmachine, name='vmachine_url'),
+    path('', views.GetVmachines),
     path('vmachine-order/<int:id>/', views.GetVmachineOrder, name='vmachine_order_url')
-    
-    
     
 ]

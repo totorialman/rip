@@ -8,11 +8,11 @@
     
     <div class="vmachine-text">Конфигурации виртуальных машин</div>
  
-    <div class="cart-container">
+    <div class="order-container">
         <a href="vmachine-order/{{ vmachine_order_url.id }}">
-        <div class="cart-icon">
+        <div class="order-icon">
             <img src="http://127.0.0.1:9000/vmachines/cart.jpg" alt="Корзина">
-            <span class="cart-count">{{ vmachine_order_count }}</span>
+            <span class="order-count">{{ vmachine_order_count }}</span>
         </div>
     </a>
     </div>
@@ -21,7 +21,7 @@
         <div class="filter-container">
             <form method="get" action="">
                 <label for="price-range" class="filter-label">Диапазон цены:</label>
-                <input type="range" id="price-range" name="vmachines_max_price" min="0" max="100000" step="50" value="{{ vmachines_max_price }}" class="price-slider">
+                <input type="range" id="price-range" name="vmachine_max_price" min="0" max="100000" step="50" value="{{ vmachines_max_price }}" class="price-slider">
                 <div class="price-value">Цена: <span id="price-value">{{ vmachines_max_price }}</span> ₽</div>
                 <button type="submit" class="btn btn-primary filter-button">Применить фильтр</button>
             </form>
