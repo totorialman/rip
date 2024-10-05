@@ -25,6 +25,7 @@ urlpatterns = [
     path('', views.GetVmachines),
     path('vmachine_max_price/<int:id>/', views.GetVmachines, name='vmachine_order_url'),
     path('vmachine-cart/<int:id>/', views.GetVmachineOrder, name='vmachine_cart_url'),
+    path('delete-request/', views.delete_request, name='delete_request')
     
     
     

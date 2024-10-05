@@ -378,7 +378,7 @@ main {
 
 .card .button {
   display: inline-block;
-  padding: 7px 20px;
+  padding: 7px 30px;
   background-color: #3755FA;
   color: white;
   border-radius: 8px;
@@ -387,7 +387,29 @@ main {
   margin-right: auto;
 }
 
-.card .button:hover {
+.button_add {
+  display: inline-block;
+  padding: 7px 30px;
+  background-color: #3755FA;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  border:none;
+  margin-right:auto;
+  
+}
+
+.button_add:active {
+  border:none;
+  text-decoration: none;}
+
+.button-container {
+  display: flex; /* Используем flexbox для горизонтального расположения */
+  gap: 10px; /* Отступ между кнопками */
+  margin-top: 10px; /* Отступ сверху для кнопок */
+}
+
+.card .button:hover .button_add:hover{
   background-color: #3b6dc1;
 }
 
@@ -461,10 +483,43 @@ main {
 margin-left: 140px;
 
 }
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  height: 60px; /* Задайте фиксированную высоту для заголовка */
+  background-color: white; /* Фон для заголовка */
+  display: flex;
+  align-items: center; /* Вертикальное центрирование содержимого заголовка */
+  padding: 10px; /* Отступ внутри заголовка */
+}
+
+main {
+  padding-top: 900px; /* Отступ сверху для основного контента */
+}
+
+.card {
+  margin-bottom: 20px; /* Отступ между карточками */
+}
+
 .total-price {
   text-align: right;
   font-size: 1.2rem;
   font-weight: bold;
   margin-top: 1rem;
   margin-bottom: 2rem;
+}
+.button_add:focus {
+  border:none;
+  text-decoration: none;
+  outline: none;}
+
+
+@media (max-width: 1200px) {
+  .card-container {
+    grid-template-columns: repeat(2, 1fr); /* Одна карточка в строке на очень маленьких экранах */
+  }
 }

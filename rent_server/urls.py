@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('vmachine/<int:id>/', views.GetVmachine, name='vmachine_url'),
     path('', views.GetVmachines),
-    path('vmachine-order/<int:id>/', views.GetVmachineOrder, name='vmachine_order_url')
+    path('delete-request/', views.delete_request, name='delete_request'),
+    path('vmachine-order/', views.GetVmachineOrder, name='vmachine_order_url')
     
 ]

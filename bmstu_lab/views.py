@@ -1,7 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.http import HttpResponseRedirect
 from django.http import HttpResponse
-from .models import Vmachine_Service,Vmachine_Request
+from .models import Vmachine_Service,Vmachine_Request,Vmachine_Request_Service
 from datetime import date 
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404, render
+from django.db import connection
 
 
 
@@ -26,6 +30,8 @@ VMACHINES = {
     
 }
 
+
+@csrf_exempt
 def GetVmachines(request):
     max_price_str = request.GET.get('vmachine_max_price', '100000')
 
@@ -37,78 +43,125 @@ def GetVmachines(request):
     # Получаем услуги с фильтрацией по цене и статусу
     filtered_vmachines = Vmachine_Service.objects.filter(price__lte=max_price, status='active')
 
-    # Проверка, аутентифицирован ли пользователь
-    if request.user.is_authenticated:
-        # Получаем текущую заявку пользователя (если она есть)
-        current_request = Vmachine_Request.objects.filter(creator=request.user, status='draft').first()
+    # Ищем текущую заявку (черновик), если она есть
+    current_request = Vmachine_Request.objects.filter(status='draft').first()
 
-        # Обработка для отображения количества услуг в текущей заявке
-        if current_request:
-            vmachine_order_count = current_request.vmachinerequestservice_set.count()
-        else:
-            vmachine_order_count = 0
-    else:
-        # Если пользователь не аутентифицирован
-        current_request = None
-        vmachine_order_count = 0
+    # Если черновика нет, устанавливаем количество услуг в корзине в 0
+    vmachine_order_count = Vmachine_Request_Service.objects.filter(request=current_request).count() if current_request else 0
+
+    # Обработка POST-запроса для добавления услуги в заявку
+    if request.method == 'POST':
+        current_request = add_service_to_request(request, current_request)
+        # Перенаправление после добавления
+        return HttpResponseRedirect(request.path_info)
 
     context = {
         'vmachines': filtered_vmachines,
         'vmachines_max_price': max_price,
         'current_request': current_request,  # Передаем текущую заявку в контекст
-        'vmachine_order_count': vmachine_order_count  # Количество услуг в черновике
+        'vmachine_order_count': vmachine_order_count,  # Количество услуг в черновике или 0
     }
 
     return render(request, 'vmachines.html', context)
 
+@csrf_exempt
+def add_service_to_request(request, current_request):
+    service_id = request.POST.get('service_id')
+    if service_id:
+        try:
+            service = Vmachine_Service.objects.get(id=service_id)
 
+            # Если нет черновика, создаем новый
+            if not current_request:
+                current_request = Vmachine_Request.objects.create(status='draft')
+
+            # Проверка, есть ли услуга уже в текущей заявке
+            request_service, created = Vmachine_Request_Service.objects.get_or_create(
+                request=current_request,
+                service=service
+            )
+
+            # Если услуга уже существует, увеличиваем её количество
+            if not created:
+                request_service.quantity += 1
+                request_service.save()
+
+        except Vmachine_Service.DoesNotExist:
+            pass  # Не делаем ничего, если услуга не найдена
+
+    return current_request
+@csrf_exempt
 def GetVmachine(request, id):
-    
-    vmachine = next((vmachine for vmachine in data_vmachines['vmachines'] if vmachine['id'] == id), None)
-    
-    if vmachine is None:
-        return HttpResponse('Заказ не найден', status=404)
+    # Получение объекта Vmachine_Service по id
+    vmachine = get_object_or_404(Vmachine_Service, id=id)
+
+    # Получаем текущую корзину (заявку), если она есть
+    current_request = Vmachine_Request.objects.filter(status='draft').first()
+
+    # Получаем количество услуг в текущей корзине, если она существует
+    vmachine_order_count = Vmachine_Request_Service.objects.filter(request=current_request).count() if current_request else 0
+
     context = {
-        'vmachine': vmachine,  
+        'vmachine': vmachine,
         'data': {
-            'vmachine': {'id': id},  
+            'vmachine': {'id': id},
         },
         'vmachine_order_url': VMACHINES[1],
-        'vmachine_order_count': len(VMACHINES[1]['items'])
+        'vmachine_order_count': vmachine_order_count,  # Количество услуг в черновике
     }
+
+    return render(request, 'vmachine.html', context)
+
+@csrf_exempt
+
+@csrf_exempt
+def GetVmachineOrder(request):
+    # Получаем текущую корзину (черновик)
+    current_request = Vmachine_Request.objects.filter(status='draft').first()
     
-    return render(request, 'vmachine.html', context
-    )
-def GetVmachineOrder(request, id):
-    
-    vmachine = VMACHINES.get(id)
-    
-    if not vmachine:
-        return HttpResponse('Корзина не найдена', status=404)
-    
+    # Если корзина пуста, возвращаем статус 204 No Content
+    if current_request is None or not Vmachine_Request_Service.objects.filter(request=current_request).exists():
+        return HttpResponse(status=204)  # Возвращаем статус 204 No Content
+
+    # Получаем все услуги в текущей заявке
+    request_services = Vmachine_Request_Service.objects.filter(request=current_request)
     
     items = []
     total_price = 0
-    for vm_id, quantity in vmachine['items'].items():
-        vmachine = next((vm for vm in data_vmachines['vmachines'] if vm['id'] == vm_id), None)
-        if vmachine:
-            vmachine_info = {
-                'id': vmachine['id'],
-                'name': vmachine['name'],
-                'price': vmachine['price'],
-                'quantity': quantity,
-                'total': vmachine['price'] * quantity,
-                'url': vmachine['url'],
-            }
-            items.append(vmachine_info)
-            total_price += vmachine_info['total']
-    
+
+    for request_service in request_services:
+        vmachine = request_service.service  # Получаем услугу из заявки
+        total = vmachine.price * request_service.quantity
+        
+        vmachine_info = {
+            'id': vmachine.id,
+            'name': vmachine.name,
+            'price': vmachine.price,
+            'quantity': request_service.quantity,
+            'total': total,
+            'url': vmachine.url,
+        }
+        items.append(vmachine_info)
+        total_price += total
+
     # Контекст для отображения на странице
     context = {
-        'vmachine_id': id,
         'items': items,
-        'total_price': total_price
+        'total_price': total_price,
     }
-    
+
     # Рендерим страницу с корзиной
     return render(request, 'vmachine-order.html', context)
+
+@csrf_exempt
+def delete_request(request):
+    # Получаем текущую корзину (черновик)
+    current_request = Vmachine_Request.objects.filter(status='draft').first()
+
+    # Если корзина существует, изменяем ее статус на 'deleted'
+    if current_request:
+        current_request.status = 'deleted'
+        current_request.save()
+
+    # Перенаправляем на главную страницу после удаления
+    return HttpResponseRedirect('http://localhost:8000/')  # Замените '

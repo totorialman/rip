@@ -151,7 +151,7 @@ class Vmachine_Request(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     formed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата формирования")
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения")
-    creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="Создатель")
+    creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="Создатель")
     moderator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='moderator_requests', verbose_name="Модератор")
 
     class Meta:

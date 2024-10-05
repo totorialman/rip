@@ -5,19 +5,20 @@
 {% block content %}
 <main>
     <section class="container">
-
         <h1 class="vmachine-text2">Оформление заказа</h1>
         
-        <div class="order-container2"style="margin-top:-20px">
+        <div class="order-container2" style="margin-top:-20px">
             <form>
-                <label for="fullname" >ФИО:</label><br>
+                <label for="fullname">ФИО:</label><br>
                 <input type="text" id="fullname" name="fullname" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:15px;"><br>
               
                 <label for="email">Почта:</label><br>
                 <input type="email" id="email" name="email" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:15px;"><br>
+                
                 <label for="birthdate">С какого числа:</label><br>
                 <input type="birthdate" id="birthdate" name="birthdate" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:50px;">
-              </form>
+            </form>
+            
             {% for item in items %}
             <div class="order-item-container">
                 <div class="image-container2">
@@ -28,16 +29,19 @@
                     <div class="item-price">Цена: {{ item.price }} ₽/мес</div>
                     <div class="item-quantity">Количество: {{ item.quantity }}</div>
                     <div class="item-total">Итого: {{ item.total }} ₽/мес</div>
-                    
                 </div>
             </div>
-            
             {% endfor %}
             
-            
-              <div class="total-price">
+            <div class="total-price">
                 Общая сумма: {{ total_price }} ₽/мес
             </div>
+
+            <!-- Кнопка для логического удаления заявки -->
+            <form action="{% url 'delete_request' %}" method="post" style="margin-top: 20px;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Удалить заявку</button>
+            </form>
         </div>
     </section>
 </main>
