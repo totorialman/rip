@@ -229,7 +229,7 @@ main {
 
 
 .image-container2 {
-  margin-top: 10px; /* Убираем отступы */
+  margin-top: 5px; /* Убираем отступы */
   margin-left: -20px;
   margin-right: -20px;
   padding: 0; /* Убираем внутренние отступы */
@@ -464,6 +464,7 @@ main {
 
 .order-item-details {
   flex-grow: 1; /* Позволяет элементам занять доступное пространство */
+  white-space: nowrap;
 }
 
 .item-name {
@@ -475,7 +476,7 @@ main {
 }
 
 .item-quantity{
-  margin-right: 50px;
+  margin-right: 67px;
   text-align: right;
 }
 
@@ -517,6 +518,20 @@ main {
   text-decoration: none;
   outline: none;}
 
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Кнопки всегда будут внизу */
+  }
+  
+  .button-container {
+    margin-top: auto; /* Это создаст пространство между контентом карточки и кнопками */
+  }
+
+  .specs {
+    margin-top: auto; /* Это создаст пространство между контентом карточки и кнопками */
+  }
 
 @media (max-width: 1200px) {
   .card-container {

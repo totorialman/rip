@@ -41,7 +41,8 @@ def GetVmachines(request):
         max_price = 100000
 
     # Получаем услуги с фильтрацией по цене и статусу
-    filtered_vmachines = Vmachine_Service.objects.filter(price__lte=max_price, status='active')
+    filtered_vmachines = Vmachine_Service.objects.filter(price__lte=max_price, status='active').order_by('id')
+
 
     # Ищем текущую заявку (черновик), если она есть
     current_request = Vmachine_Request.objects.filter(status='draft').first()
