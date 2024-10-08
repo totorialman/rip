@@ -28,16 +28,14 @@ def GetVmachines(request):
     # Если черновика нет, устанавливаем количество услуг в корзине в 0
     vmachine_order_count = Vmachine_Request_Service.objects.filter(request=current_request).count() if current_request else 0
 
-    # Обработка POST-запроса для добавления услуги в заявку
     if request.method == 'POST':
         current_request = add_service_to_request(request, current_request)
-        # Перенаправление после добавления
         return HttpResponseRedirect(request.path_info)
 
     context = {
         'vmachines': filtered_vmachines,
         'vmachines_max_price': max_price,
-        'current_request': current_request,  # Передаем текущую заявку в контекст
+        'current_request': current_request,  
         'vmachine_order_count': vmachine_order_count,  # Количество услуг в черновике или 0
     }
 
@@ -66,19 +64,18 @@ def add_service_to_request(request, current_request):
                 request_service.save()
 
         except Vmachine_Service.DoesNotExist:
-            pass  # Не делаем ничего, если услуга не найдена
+            pass 
 
     return current_request
 
 
 def GetVmachine(request, id):
-    # Получение объекта Vmachine_Service по id
     vmachine = get_object_or_404(Vmachine_Service, id=id)
 
     # Получаем текущую корзину (заявку), если она есть
     current_request = Vmachine_Request.objects.filter(status='draft').first()
 
-    # Получаем количество услуг в текущей корзине, если она существует
+    
     vmachine_order_count = Vmachine_Request_Service.objects.filter(request=current_request).count() if current_request else 0
 
     context = {
@@ -96,18 +93,17 @@ def GetVmachine(request, id):
 
 
 def GetVmachineOrder(request, id):
-    # Получаем текущую заявку
+    
     current_request = Vmachine_Request.objects.filter(id=id).first()
     if not current_request:
         return HttpResponseRedirect('/')
     
 
-    # Фильтруем заявки по допустимым статусам
+    
     allowed_statuses = ['draft', 'formed', 'completed']
     if current_request.status not in allowed_statuses:
         return HttpResponseRedirect('/')
 
-    # Получаем все услуги в текущей заявке
     request_services = Vmachine_Request_Service.objects.filter(request=current_request)
 
     # Если в заявке нет услуг, возвращаем статус 204 No Content
@@ -132,14 +128,14 @@ def GetVmachineOrder(request, id):
         items.append(vmachine_info)
         total_price += total
 
-    # Контекст для отображения на странице
+    
     context = {
         'items': items,
         'total_price': total_price,
-        'current_request': current_request,  # Передаем текущую заявку
+        'current_request': current_request,  
     }
 
-    # Рендерим страницу с корзиной
+    
     return render(request, 'vmachine-order.html', context)
 
 
@@ -147,7 +143,7 @@ def GetVmachineOrder(request, id):
 def delete_request(request):
     current_request = Vmachine_Request.objects.filter(status='draft').first()
 
-    # Если корзина существует, изменяем ее статус на 'deleted'
+   
     if current_request:
         current_request.status = 'deleted'
         current_request.save()
