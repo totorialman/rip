@@ -17,6 +17,7 @@
     <div class="button-container">
         <a href="{% url 'vmachine_url' element.id %}" class="button">Подробнее</a>
         <form method="POST" style="display: inline;">
+            {% csrf_token %}
             <input type="hidden" name="service_id" value="{{ vmachine.id }}">
             <input type="hidden" name="max_price" value="{{ vmachines_max_price }}">
             <button type="submit" class="button_add">Добавить</button>
