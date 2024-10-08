@@ -7,9 +7,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, render
 from django.db import connection
 
-
-
-
 def GetVmachines(request):
     max_price_str = request.GET.get('vmachine_max_price', '100000')
 
@@ -18,14 +15,11 @@ def GetVmachines(request):
     except ValueError:
         max_price = 100000
 
-    # Получаем услуги с фильтрацией по цене и статусу
+
     filtered_vmachines = Vmachine_Service.objects.filter(price__lte=max_price, status='active').order_by('id')
 
-
-    # Ищем текущую заявку (черновик), если она есть
     current_request = Vmachine_Request.objects.filter(status='draft').first()
 
-    # Если черновика нет, устанавливаем количество услуг в корзине в 0
     vmachine_order_count = Vmachine_Request_Service.objects.filter(request=current_request).count() if current_request else 0
 
     if request.method == 'POST':
@@ -48,7 +42,6 @@ def add_service_to_request(request, current_request):
         try:
             service = Vmachine_Service.objects.get(id=service_id)
 
-            # Если нет черновика, создаем новый
             if not current_request:
                 current_request = Vmachine_Request.objects.create(status='draft')
 
@@ -58,7 +51,6 @@ def add_service_to_request(request, current_request):
                 service=service
             )
 
-            # Если услуга уже существует, увеличиваем её количество
             if not created:
                 request_service.quantity += 1
                 request_service.save()
@@ -84,7 +76,7 @@ def GetVmachine(request, id):
             'vmachine': {'id': id},
         },
         'current_request': current_request,
-        'vmachine_order_count': vmachine_order_count,  # Количество услуг в черновике
+        'vmachine_order_count': vmachine_order_count,  
     }
 
     return render(request, 'vmachine.html', context)
@@ -106,7 +98,7 @@ def GetVmachineOrder(request, id):
 
     request_services = Vmachine_Request_Service.objects.filter(request=current_request)
 
-    # Если в заявке нет услуг, возвращаем статус 204 No Content
+    
     if not request_services.exists():
         return HttpResponse(status=204)
 
