@@ -1,0 +1,540 @@
+
+
+/* Общие стили */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif; /* Применяем шрифт ко всем элементам */
+}
+
+body {
+  font-family: 'Inter', sans-serif; /* Устанавливаем шрифт для всего текста на странице */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #ffffff;
+  padding: 1rem;
+  margin: 0; /* Убедитесь, что нет дополнительных отступов у body */
+}
+
+header {
+  position: absolute; /* Заголовок вверху страницы */
+  top: 0;
+  left: 0;
+  width: 100%; /* Заголовок занимает всю ширину страницы */
+  background-color: #ffffff; /* Фон заголовка */
+  border-bottom: 1px solid #ddd; /* Граница снизу */
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  z-index: 1000; /* Обеспечивает, что заголовок будет поверх карточек */
+}
+
+
+/* Стили для ссылки */
+.home-link {
+  display: inline-block;
+  text-decoration: none; /* Убираем подчеркивание ссылки */
+}
+
+/* Стили для иконки */
+.home-icon {
+  width: 50%; /* Задайте ширину иконки по вашему усмотрению */
+  height: auto; /* Высота будет автоматически настроена в соответствии с пропорциями изображения */
+}
+
+/* Основное содержимое страницы */
+main {
+  padding-top: 900px; /* Добавляем отступ сверху, чтобы содержимое не перекрывалось заголовком */
+}
+
+.card {
+  margin: 10px;
+}
+.container {
+  margin-top: 20px;
+}
+
+/* Стили для заголовка заказа */
+.vmachine-text {
+  font-weight: bold;
+  font-size: 44px;
+  color: rgb(0, 0, 0);
+  text-align: left;
+  margin-bottom: 50px;
+  margin-top: 50px;
+  margin-left: 10px;
+}
+/* Стили для заголовка заказа */
+.vmachine-text2 {
+  font-weight: bold;
+  font-size: 44px;
+  color: rgb(0, 0, 0);
+  text-align: left;
+  margin-bottom: 50px;
+  margin-top: -1200px;
+  margin-left: 10px;
+}
+
+/* Стили для контейнера карточек */
+.card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Автоматическое создание колонок */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem; /* Расстояние между карточками */
+  
+}
+
+.card-container2 {
+  display: auto;
+  max-width: 700px;
+  grid-template-columns: repeat(auto-fit, minmax(550px, 1fr)); /* Автоматическое создание колонок */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: -770px;
+  align-content: center;
+}
+
+/* Стили для контейнера корзины */
+.order-container {
+  
+  position: fixed; /* Фиксированное позиционирование */
+  top: 10px; /* Отступ сверху */
+  right: 10px; /* Отступ справа */
+  z-index: 1000; /* Убедитесь, что корзина выше других элементов */
+}
+
+.order-icon {
+  position: relative;
+  width: 40px; /* Ширина иконки */
+  height: 40px; /* Высота иконки */
+  background: url('cart-icon.png') no-repeat center center; /* Замените на реальное изображение иконки */
+  background-size: cover;
+}
+
+.order-count {
+  position: absolute;
+  top: -5px; /* Положение цифры относительно иконки */
+  right: -5px; /* Положение цифры относительно иконки */
+  background-color: red; /* Цвет фона цифры */
+  color: white; /* Цвет текста цифры */
+  border-radius: 50%; /* Округлая форма цифры */
+  width: 20px; /* Ширина цифры */
+  height: 20px; /* Высота цифры */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px; /* Размер шрифта цифры */
+}
+/* Стили для контейнера корзины */
+.order-container {
+  position: fixed; /* Фиксированное позиционирование */
+  top: 100px; /* Отступ сверху */
+  right: 50px; /* Отступ справа */
+  z-index: 1000; /* Убедитесь, что корзина выше других элементов */
+}
+
+.order-icon {
+  position: relative;
+  width: 40px; /* Ширина иконки */
+  height: 40px; /* Высота иконки */
+}
+
+        /* Стили для корзины */
+        .order-container2 {
+          background-color: white;
+  border-radius: 8px;
+
+  /*box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);*/
+  padding: 20px;
+  text-align: left;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+            margin-top:50px;
+            border-radius: 8px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-weight: bold;
+        }
+
+        .item-details {
+            text-align: right;
+        }
+
+        .item-price, .item-quantity, .item-total {
+            margin-bottom: 0.5rem;
+           
+        }
+
+        .total-price {
+            text-align: right;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+ 
+.order-icon img {
+  width: 100%; /* Иконка растягивается на всю ширину контейнера */
+  height: auto; /* Высота подстраивается автоматически */
+}
+
+.order-count {
+  position: absolute;
+  top: 10px; /* Положение цифры относительно иконки */
+  right: -5px; /* Положение цифры относительно иконки */
+  background-color: red; /* Цвет фона цифры */
+  color: white; /* Цвет текста цифры */
+  border-radius: 50%; /* Округлая форма цифры */
+  width: 20px; /* Ширина цифры */
+  height: 20px; /* Высота цифры */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px; /* Размер шрифта цифры */
+}
+
+
+/* Стили для контейнера изображения */
+.image-container {
+  margin-top: -20px; /* Убираем отступы */
+  margin-left: -20px;
+  margin-right: -20px;
+  padding: 0; /* Убираем внутренние отступы */
+  
+}
+
+.image-container img {
+  width: 100%; /* Изображение растягивается на всю ширину карточки */
+  height: auto; /* Высота подстраивается автоматически */
+  display: block; /* Убираем пробелы между изображением и границей */
+  border-radius: 0 0 0 0; /* Изображение без закругленных углов */
+  object-fit: cover; /* Изображение полностью заполняет контейнер */
+  border-radius: 8px;
+}
+
+
+.image-container2 {
+  margin-top: 5px; /* Убираем отступы */
+  margin-left: -20px;
+  margin-right: -20px;
+  padding: 0; /* Убираем внутренние отступы */
+  width: 35%;
+}
+.image-container2 img {
+  width: 50%; /* Изображение растягивается на всю ширину карточки */
+  height: auto; /* Высота подстраивается автоматически */
+  display: block; /* Убираем пробелы между изображением и границей */
+  border-radius: 0 0 0 0; /* Изображение без закругленных углов */
+  object-fit: cover; /* Изображение полностью заполняет контейнер */
+  border-radius: 8px;
+}
+
+/* Стили для карточек */
+.card {
+  background-color: white;
+  border-radius: 8px;
+  border: 2px solid #cdcdcd;
+  /*box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);*/
+  padding: 20px;
+  text-align: center;
+  position: relative;
+}
+
+.card .header {
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+  color: rgb(0, 0, 0);
+  position: relative;
+  text-align: left;
+  margin-top: 10px;
+  margin-bottom: -10px;
+}
+
+.card .title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.card .icon {
+  width: 30px;
+  height: 30px;
+  background: url('icon.png') no-repeat center center; /* Замените на реальное изображение иконки */
+  background-size: cover;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.card .description {
+  font-size: 14px;
+  text-align: left;
+  color: #000000;
+  margin: 15px 0;
+}
+
+.card .specs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 15px;
+}
+
+.card .spec {
+  font-size: 16px;
+  color: #333;
+}
+
+.card .price {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: right;
+}
+
+/* Стили для контейнера фильтрации */
+.filter-container {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 100%;
+  text-align: center;
+}
+
+/* Стили для метки фильтрации */
+.filter-label {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Стили для ползунка цены */
+.price-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  background: #ddd;
+  height: 8px;
+  border-radius: 5px;
+  outline: none;
+  margin: 10px 0;
+}
+
+.price-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background: #4D89FF;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+
+
+.price-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: #4D89FF;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* Стили для значения цены */
+.price-value {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* Стили для кнопки применения фильтра */
+.filter-button {
+  background-color: #3755FA;
+  color: white;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.filter-button:hover {
+  background-color: #3b6dc1;
+}
+
+
+.card .button {
+  display: inline-block;
+  padding: 7px 30px;
+  background-color: #3755FA;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  
+  margin-right: auto;
+}
+
+.button_add {
+  display: inline-block;
+  padding: 7px 30px;
+  background-color: #3755FA;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  border:none;
+  margin-right:auto;
+  
+}
+
+.button_add:active {
+  border:none;
+  text-decoration: none;}
+
+.button-container {
+  display: flex; /* Используем flexbox для горизонтального расположения */
+  gap: 10px; /* Отступ между кнопками */
+  margin-top: 10px; /* Отступ сверху для кнопок */
+}
+
+.card .button:hover .button_add:hover{
+  background-color: #3b6dc1;
+}
+
+
+
+
+/* Медиа-запросы (опционально, для дополнительной настройки) */
+@media (max-width: 768px) {
+  .card-container {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Уменьшение минимального размера карточек */
+  }
+}
+
+@media (max-width: 480px) {
+  .card-container {
+      grid-template-columns: 1fr; /* Одна карточка в строке на очень маленьких экранах */
+  }
+}
+
+/* Стили для контейнера корзины */
+.order-container2 {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+/* Стили для контейнера корзины с изображением и деталями */
+.order-item-container {
+  display: flex; /* Устанавливаем флекс-контейнер */
+  align-items: center; /* Центрируем элементы по вертикали */
+  border-bottom: 1px solid #ddd;
+  padding: 1rem;
+}
+
+.order-item-container:last-child {
+  border-bottom: none;
+}
+
+.image-container2 {
+  margin-right: 20px; /* Отступ между изображением и деталями */
+}
+
+.image-container2 img {
+  margin-top: -40px;
+  width: 170px; /* Ширина изображения */
+  height: auto; /* Высота автоматически подстраивается */
+  border-radius: 8px; /* Закругленные углы изображения */
+}
+
+.order-item-details {
+  flex-grow: 1; /* Позволяет элементам занять доступное пространство */
+  white-space: nowrap;
+}
+
+.item-name {
+  font-weight: bold;
+}
+
+.item-price, .item-quantity, .item-total {
+  margin-bottom: 0.2rem;
+}
+
+.item-quantity{
+  margin-right: 67px;
+  text-align: right;
+}
+
+.item-total {
+margin-left: 140px;
+
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  height: 60px; /* Задайте фиксированную высоту для заголовка */
+  background-color: white; /* Фон для заголовка */
+  display: flex;
+  align-items: center; /* Вертикальное центрирование содержимого заголовка */
+  padding: 10px; /* Отступ внутри заголовка */
+}
+
+main {
+  padding-top: 900px; /* Отступ сверху для основного контента */
+}
+
+.card {
+  margin-bottom: 20px; /* Отступ между карточками */
+}
+
+.total-price {
+  text-align: right;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+.button_add:focus {
+  border:none;
+  text-decoration: none;
+  outline: none;}
+
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Кнопки всегда будут внизу */
+  }
+  
+  .button-container {
+    margin-top: auto; /* Это создаст пространство между контентом карточки и кнопками */
+  }
+
+  .specs {
+    margin-top: auto; /* Это создаст пространство между контентом карточки и кнопками */
+  }
+
+@media (max-width: 1200px) {
+  .card-container {
+    grid-template-columns: repeat(2, 1fr); /* Одна карточка в строке на очень маленьких экранах */
+  }
+}

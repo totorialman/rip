@@ -1,0 +1,40 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Виртуальная машина №{{ vmachine.id }}{% endblock %}
+
+
+{% block content %}
+
+<div class="card-container2">
+    <div class="order-container">
+        {% if current_request %}
+        <a href="{% url 'vmachine_order_url' current_request.id %}">
+            <div class="order-icon">
+                <img src="http://127.0.0.1:9000/vmachines/cart.jpg" alt="Корзина">
+                <span class="order-count">{{ vmachine_order_count }}</span>
+            </div>
+        </a>
+    {% else %}
+        <div class="order-icon">
+            <img src="http://127.0.0.1:9000/vmachines/cart.jpg" alt="Корзина">
+            <span class="order-count">0</span>
+        </div>
+    {% endif %}
+    </div>
+    <div class="card">
+        
+        <div class="image-container">
+            <img src={{ vmachine.url }} alt="Card Image"> 
+        </div>
+        <div class="header">
+            <div class="title">{{ vmachine.name }}</div>
+        </div>
+        <div class="description">
+            <p><strong>Технические сведения:</strong></p>
+            {{vmachine.description_tech}}
+        </div>
+        <div class="price">{{vmachine.price}} ₽/мес</div>
+    </div>
+</div>
+{% endblock %}
