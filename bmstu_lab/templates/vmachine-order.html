@@ -10,13 +10,13 @@
         <div class="order-container2" style="margin-top:-20px">
             <form>
                 <label for="fullname">ФИО:</label><br>
-                <input type="text" id="fullname" name="fullname" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:15px;"><br>
+                <input type="text" id="fullname" name="fullname" value="{{ full_name|default_if_none:'' }}" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:15px;"><br>
               
                 <label for="email">Почта:</label><br>
-                <input type="email" id="email" name="email" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:15px;"><br>
+                <input type="email" id="email" name="email" value="{{ email|default_if_none:'' }}" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:15px;"><br>
                 
                 <label for="birthdate">С какого числа:</label><br>
-                <input type="birthdate" id="birthdate" name="birthdate" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:50px;">
+                <input type="date" id="birthdate" name="birthdate" value="{{ from_date|default_if_none:''|date:'Y-m-d' }}" style="width: 65%; height: 65%; padding: 7px; border-radius: 8px; border: 2px solid #ccc;margin-bottom:50px;">
             </form>
             
             {% for item in items %}

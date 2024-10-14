@@ -154,10 +154,16 @@ class Vmachine_Request(models.Model):
     creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="Создатель")
     moderator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='moderator_requests', verbose_name="Модератор")
 
+    # Новые поля
+    full_name = models.TextField(null=True, blank=True, verbose_name="ФИО")
+    email = models.TextField(null=True, blank=True, verbose_name="Почта")
+    from_date = models.DateTimeField(null=True, blank=True, verbose_name="С какого числа")
+
     class Meta:
         db_table = 'vmachine_request'
         verbose_name = "Заявка на виртуальную машину"
         verbose_name_plural = "Заявки на виртуальные машины"
+
 
 
 class Vmachine_Request_Service(models.Model):

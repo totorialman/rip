@@ -27,7 +27,7 @@
     <div class="col-md-4 mb-4">
         <div class="filter-container">
             <form method="get" action="">
-                {% csrf_token %} 
+                
                 <label for="price-range" class="filter-label">Диапазон цены:</label>
                 <input type="range" id="price-range" name="vmachine_max_price" min="0" max="100000" step="50" value="{{ vmachines_max_price }}" class="price-slider">
                 <div class="price-value">Цена: <span id="price-value">{{ vmachines_max_price }}</span> ₽</div>

@@ -6,6 +6,7 @@ from datetime import date
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, render
 from django.db import connection
+from django.db.models import F
 
 def GetVmachines(request):
     max_price_str = request.GET.get('vmachine_max_price', '100000')
@@ -36,7 +37,7 @@ def GetVmachines(request):
     return render(request, 'vmachines.html', context)
 
 
-def add_service_to_request(request, current_request):
+def add_service_to_request(request, current_request): 
     service_id = request.POST.get('service_id')
     if service_id:
         try:
@@ -52,8 +53,8 @@ def add_service_to_request(request, current_request):
             )
 
             if not created:
-                request_service.quantity += 1
-                request_service.save()
+                # Увеличиваем количество напрямую через ORM
+                Vmachine_Request_Service.objects.filter(id=request_service.id).update(quantity=F('quantity') + 1)
 
         except Vmachine_Service.DoesNotExist:
             pass 
@@ -85,12 +86,9 @@ def GetVmachine(request, id):
 
 
 def GetVmachineOrder(request, id):
-    
     current_request = Vmachine_Request.objects.filter(id=id).first()
     if not current_request:
         return HttpResponseRedirect('/')
-    
-
     
     allowed_statuses = ['draft', 'formed', 'completed']
     if current_request.status not in allowed_statuses:
@@ -98,7 +96,6 @@ def GetVmachineOrder(request, id):
 
     request_services = Vmachine_Request_Service.objects.filter(request=current_request)
 
-    
     if not request_services.exists():
         return HttpResponse(status=204)
 
@@ -124,20 +121,37 @@ def GetVmachineOrder(request, id):
     context = {
         'items': items,
         'total_price': total_price,
-        'current_request': current_request,  
+        'current_request': current_request,
+        'full_name': current_request.full_name,
+        'email': current_request.email,
+        'from_date': current_request.from_date,
     }
 
-    
     return render(request, 'vmachine-order.html', context)
 
 
 
 def delete_request(request):
-    current_request = Vmachine_Request.objects.filter(status='draft').first()
+    
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT id
+            FROM vmachine_request
+            WHERE status = 'draft'
+            ORDER BY created_at
+            LIMIT 1
+        """)
+        row = cursor.fetchone()
 
-   
-    if current_request:
-        current_request.status = 'deleted'
-        current_request.save()
+    if row:
+        request_id = row[0]
 
-    return HttpResponseRedirect('http://localhost:8000/') 
+        
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE vmachine_request
+                SET status = 'deleted'
+                WHERE id = %s
+            """, [request_id])
+
+    return HttpResponseRedirect('http://localhost:8000/')
