@@ -40,7 +40,7 @@ INSTALLED_APPS = [
 
     # DRF
     'rest_framework',
-
+    
     # Наше приложение
     'stocks',
 ]

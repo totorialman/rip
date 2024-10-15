@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User 
 
 
 class AuthGroup(models.Model):
@@ -133,3 +134,66 @@ class Stock(models.Model):
     date_modified = models.DateTimeField(auto_now=True, verbose_name="Когда последний раз обновлялось значение акции?")
     url = models.CharField(max_length=255, blank=True, null=True, verbose_name="Фото логотипа компании")
     user = models.ForeignKey('AuthUser', on_delete=models.DO_NOTHING, null=True, blank=False, verbose_name="Создатель акции")
+
+class Vmachine_Service(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('deleted', 'Deleted'),
+    ]
+    
+    name = models.CharField(max_length=255, verbose_name="Название виртуальной машины")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
+    description = models.TextField(verbose_name="Описание")
+    description_tech = models.TextField(verbose_name="Техническое описание")
+    vcpu = models.CharField(max_length=50, verbose_name="vCPU")
+    ram = models.CharField(max_length=50, verbose_name="ОЗУ")
+    ssd = models.CharField(max_length=50, verbose_name="SSD")
+    url = models.CharField(max_length=255, blank=True, null=True, verbose_name="Изображение")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active', verbose_name="Статус")
+
+    class Meta:
+        db_table = 'vmachine_service'
+        verbose_name = "Услуга виртуальной машины"
+        verbose_name_plural = "Услуги виртуальных машин"
+
+class Vmachine_Request(models.Model):
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('deleted', 'Deleted'),
+        ('formed', 'Formed'),
+        ('completed', 'Completed'),
+        ('rejected', 'Rejected'),
+    ]
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft', verbose_name="Статус")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    formed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата формирования")
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения")
+
+    # Поле creator (создатель) ссылается на User
+    creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="Создатель", related_name="created_requests")
+
+    # Поле moderator (модератор) также ссылается на User
+    moderator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='moderated_requests', verbose_name="Модератор")
+
+    full_name = models.TextField(null=True, blank=True, verbose_name="ФИО")
+    email = models.TextField(null=True, blank=True, verbose_name="Почта")
+    from_date = models.DateTimeField(null=True, blank=True, verbose_name="С какого числа")
+
+    class Meta:
+        db_table = 'vmachine_request'
+        verbose_name = "Заявка на виртуальную машину"
+        verbose_name_plural = "Заявки на виртуальные машины"
+
+class Vmachine_Request_Service(models.Model):
+    request = models.ForeignKey(Vmachine_Request, on_delete=models.CASCADE, verbose_name="Заявка")
+    service = models.ForeignKey(Vmachine_Service, on_delete=models.CASCADE, verbose_name="Услуга")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Количество")
+    is_main = models.BooleanField(default=False, verbose_name="Основная услуга")
+    order = models.IntegerField(null=True, blank=True, verbose_name="Порядок")
+
+    class Meta:
+        unique_together = (('request', 'service'),)
+        db_table = 'vmachine_request_service'
+        verbose_name = "Связь заявки и услуги"
+        verbose_name_plural = "Связи заявок и услуг"
