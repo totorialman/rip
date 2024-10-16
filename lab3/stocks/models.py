@@ -114,27 +114,6 @@ class DjangoSession(models.Model):
         managed = False
         db_table = 'django_session'
 
-
-class StocksStock(models.Model):
-    company_name = models.CharField(max_length=50)
-    price = models.DecimalField(max_digits=10, decimal_places=5)  # max_digits and decimal_places have been guessed, as this database handles decimal fields as float    
-    is_growing = models.BooleanField()
-    date_modified = models.DateTimeField()
-    url = models.CharField(max_length=255, blank=True, null=True)
-    user = models.ForeignKey(AuthUser, models.DO_NOTHING, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'stocks_stock'
-
-class Stock(models.Model):
-    company_name = models.CharField(max_length=50, verbose_name="Название компании")
-    price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Цена акции")
-    is_growing = models.BooleanField(verbose_name="Растет ли акция в цене?")
-    date_modified = models.DateTimeField(auto_now=True, verbose_name="Когда последний раз обновлялось значение акции?")
-    url = models.CharField(max_length=255, blank=True, null=True, verbose_name="Фото логотипа компании")
-    user = models.ForeignKey('AuthUser', on_delete=models.DO_NOTHING, null=True, blank=False, verbose_name="Создатель акции")
-
 class Vmachine_Service(models.Model):
     STATUS_CHOICES = [
         ('active', 'Active'),
@@ -170,15 +149,15 @@ class Vmachine_Request(models.Model):
     formed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата формирования")
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения")
 
-    # Поле creator (создатель) ссылается на User
     creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="Создатель", related_name="created_requests")
 
-    # Поле moderator (модератор) также ссылается на User
     moderator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='moderated_requests', verbose_name="Модератор")
 
     full_name = models.TextField(null=True, blank=True, verbose_name="ФИО")
     email = models.TextField(null=True, blank=True, verbose_name="Почта")
-    from_date = models.DateTimeField(null=True, blank=True, verbose_name="С какого числа")
+    from_date = models.DateField(null=True, blank=True, verbose_name="С какого числа")
+
+    final_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Итоговая цена")
 
     class Meta:
         db_table = 'vmachine_request'
