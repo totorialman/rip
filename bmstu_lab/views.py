@@ -132,21 +132,8 @@ def GetVmachineOrder(request, id):
 
 
 def delete_request(request):
-    
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT id
-            FROM vmachine_request
-            WHERE status = 'draft'
-            ORDER BY created_at
-            LIMIT 1
-        """)
-        row = cursor.fetchone()
-
-    if row:
-        request_id = row[0]
-
-        
+    request_id = Vmachine_Request.objects.filter(status='draft').first().id
+    if request_id:
         with connection.cursor() as cursor:
             cursor.execute("""
                 UPDATE vmachine_request
