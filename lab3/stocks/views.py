@@ -153,6 +153,7 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Vmachine_Request.objects.exclude(status__in=['deleted', 'draft'])
+        
 
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')

@@ -9,8 +9,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email']
 
 class VmachineRequestSerializer(serializers.ModelSerializer):
-    creator = UserSerializer(read_only=True)  
-    moderator = UserSerializer(read_only=True)
+    creator = serializers.CharField(source='creator.username',read_only=True)  
+    moderator = serializers.CharField(source='moderator.username',read_only=True)
     
     class Meta:
         model = Vmachine_Request
