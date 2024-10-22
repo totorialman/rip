@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 class VmachineRequestSerializer(serializers.ModelSerializer):
     creator = UserSerializer(read_only=True)  
     moderator = UserSerializer(read_only=True)
-
+    
     class Meta:
         model = Vmachine_Request
         fields = [

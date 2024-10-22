@@ -66,7 +66,7 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
         if status_update not in ['completed', 'rejected']:
             return Response({"status": ["Недопустимый статус. Используйте 'completed' или 'rejected'."]}, status=status.HTTP_400_BAD_REQUEST)
 
-        moderator = User.objects.all()[0]  
+        moderator = User.objects.all()[0].username  
         instance.moderator = moderator
         if status_update == 'completed':
             instance.completed_at = datetime.now()
@@ -110,9 +110,13 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
         print(request_services)
         services_serializer = VmachineRequestServiceSerializer(request_services, many=True)
 
+        request_data = request_serializer.data
+        request_data['creator'] = request_serializer.instance.creator.username  # Заменяем объект на username
+
+
         response_data = {
-            'request': request_serializer.data,  
-            'services': services_serializer.data  
+            'rent': request_data,  
+            'vmachines': services_serializer.data  
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -127,7 +131,7 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        default_user = AuthUser.objects.first()
+        default_user = AuthUser.objects.first().username
         request_instance = serializer.save(
             creator=default_user,
             created_at=timezone.now(),
@@ -149,6 +153,7 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Vmachine_Request.objects.exclude(status__in=['deleted', 'draft'])
+
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
         status_filter = self.request.GET.get('status')
@@ -166,6 +171,7 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
 
         if status_filter:
             queryset = queryset.filter(status=status_filter)
+        
         if not queryset.exists():
             return []  
         return queryset
@@ -194,12 +200,12 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
     def reject(self, request, pk=None):
         instance = self.get_object()
         instance.status = 'rejected'
-        instance.moderator = User.objects.first()  
+        instance.moderator = User.objects.first() 
         instance.save()
         return Response({"status": "Request has been rejected."})
 
     @action(detail=True, methods=['delete'])
-    def delete_request(self, request, pk=None):
+    def delete_rent(self, request, pk=None):
         instance = get_object_or_404(Vmachine_Request, pk=pk)
         instance.status = 'deleted'
         instance.formed_at = timezone.now()
@@ -291,12 +297,12 @@ class VmachineServiceList(APIView):
 
         serializer = VmachineServiceSerializer(services, many=True)
         first_draft_request = Vmachine_Request.objects.filter(status='draft').first()
-        draft_request_id = first_draft_request.id if first_draft_request else None 
-        draft_count = Vmachine_Request_Service.objects.filter(request=first_draft_request).count()
+        rent_id = first_draft_request.id if first_draft_request else None 
+        vmachine_count = Vmachine_Request_Service.objects.filter(request=first_draft_request).count()
         response_data = {
-            'services': serializer.data,
-            'draft_request_id': draft_request_id,
-            'draft_count': draft_count
+            'vmachines': serializer.data,
+            'rent_id': rent_id,
+            'vmachine_count': vmachine_count
         }
         return Response(response_data)
 
@@ -308,9 +314,9 @@ from .serializers import VmachineRequestSerializer, VmachineRequestServiceSerial
 from django.utils import timezone
 
 @api_view(['POST'])
-def create_request(request):
+def create_rent_vmachine(request):
     request_data = request.data.copy()
-    default_user = User.objects.all()[0]  
+    default_user = User.objects.all()[0].username  
     draft_request = Vmachine_Request.objects.filter(status='draft').first()
     print(f"draft_request: {draft_request}")  
 
@@ -332,8 +338,8 @@ def create_request(request):
             }, status=status.HTTP_200_OK)
         else:
             request_service_data = {
-                'request': draft_request.id,  
-                'service': service_id,
+                'rent': draft_request.id,  
+                'vmachine': service_id,
                 'quantity': quantity,
                 'is_main': request_data.get('is_main', False)
             }
@@ -342,7 +348,7 @@ def create_request(request):
                 service_instance = service_serializer.save()
                 return Response({
                     
-                    "service": service_serializer.data
+                    "vmachine": service_serializer.data
                 }, status=status.HTTP_201_CREATED)
             return Response(service_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -364,8 +370,8 @@ def create_request(request):
             service_id = request_data.get('service')  
             quantity = request_data.get('quantity', 1)  
             request_service_data = {
-                'request': request_instance.id,  
-                'service': service_id,
+                'rent': request_instance.id,  
+                'vmachine': service_id,
                 'quantity': quantity,
                 'is_main': request_data.get('is_main', False)
             }
@@ -374,13 +380,13 @@ def create_request(request):
             if service_serializer.is_valid():
                 service_serializer.save()
                 return Response({ 
-                    "service": service_serializer.data
+                    "vmachine": service_serializer.data
                 }, status=status.HTTP_201_CREATED)
             return Response(service_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
-def create_service(request):
+def create_vmachine(request):
     request_data = request.data.copy()
     request_data['url'] = ' '
     serializer = VmachineServiceSerializer(data=request_data)
@@ -397,7 +403,7 @@ def create_service(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
-def add_service_to_request(request, request_id):
+def add_vmachine_to_rent(request, request_id):
     try:
         vmachine_request = Vmachine_Request.objects.get(id=request_id)
     except Vmachine_Request.DoesNotExist:
