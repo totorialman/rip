@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from django.utils import timezone
-from stocks.models import AuthUser
+from stocks.models import AuthUser, User
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
@@ -10,10 +10,125 @@ from stocks.minio import add_url
 from stocks.minio import delete_file_from_minio
 from rest_framework import viewsets
 from datetime import datetime
-from .models import Vmachine_Request, Vmachine_Service, Vmachine_Request_Service
+from stocks.permissions import IsAdmin, IsManager
+from .models import Vmachine_Request, Vmachine_Service, Vmachine_Request_Service, CustomUser
 from .serializers import VmachineRequestSerializer, VmachineRequestServiceSerializer, VmachineServiceSerializer, UserSerializer
 from django.utils import timezone
 from datetime import datetime
+from drf_yasg.utils import swagger_auto_schema
+from django.conf import settings
+from django.db import transaction
+import redis
+from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from django.contrib.auth import authenticate, login
+from django.http import HttpResponse
+import uuid
+from django.utils.decorators import method_decorator
+from rest_framework.decorators import api_view, permission_classes
+
+
+
+session_storage = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+
+
+def method_permission_classes(classes):
+    def decorator(func):
+        def decorated_func(self, *args, **kwargs):
+            self.permission_classes = classes        
+            self.check_permissions(self.request)
+            return func(self, *args, **kwargs)
+        return decorated_func
+    return decorator
+
+
+
+@swagger_auto_schema(method='post', request_body=UserSerializer)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def login_view(request):
+    username = request.data["username"] 
+    password = request.data["password"]
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)
+        random_key = str(uuid.uuid4())
+        session_storage.set(random_key, username)
+
+        response = HttpResponse("{'status': 'ok'}")
+        response.set_cookie("session_id", random_key)
+
+        
+
+        return response
+    else:
+        return HttpResponse("{'status': 'error', 'error': 'login failed'}")
+
+@swagger_auto_schema(method='delete', request_body=UserSerializer)
+@api_view(["DELETE"])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def logout_view(request):
+    session_id = request.COOKIES.get('session_id')
+    
+    # Удаляем запись из Redis, если session_id существует
+    if session_id:
+        session_storage.delete(session_id)
+
+    # Удаляем сессию Django
+    logout(request)
+    
+    # Удаляем куки sessionid
+    response = Response({'status': 'Success'})
+    response.delete_cookie('session_id')  # Удаляем куки session_id
+
+    return response
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Класс, описывающий методы работы с пользователями
+    Осуществляет связь с таблицей пользователей в базе данных
+    """
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    model_class = CustomUser
+
+    def get_permissions(self):
+        if self.action in ['create']:
+            permission_classes = [AllowAny]
+        elif self.action in ['list']:
+            permission_classes = [IsAdmin | IsManager]
+        else:
+            permission_classes = [IsAdmin]
+        return [permission() for permission in permission_classes]
+
+    
+    def create(self, request):
+        """
+        Функция регистрации новых пользователей
+        Если пользователя c указанным в request email ещё нет, в БД будет добавлен новый пользователь.
+        """
+        if self.model_class.objects.filter(username=request.data['username']).exists():
+            return Response({'status': 'Exist'}, status=400)
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            print(serializer.data)
+            self.model_class.objects.create_user(username=serializer.data['username'],
+                                     password=serializer.data['password'],
+                                     is_superuser=serializer.data['is_superuser'],
+                                     is_staff=serializer.data['is_staff'])
+            
+            return Response({'status': 'Success'}, status=200)
+        return Response({'status': 'Error', 'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+
 
 class VmachineRequestViewSet(viewsets.ModelViewSet):
     queryset = Vmachine_Request.objects.exclude(status='deleted')
@@ -57,8 +172,9 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
             total_price += service.service.price * service.quantity
         return total_price
 
+
     def update_status_moder(self, request, pk=None):
-        instance = self.get_object()  
+        instance = Vmachine_Request.objects.get(pk=pk)
         status_update = request.data.get('status')  
         if instance.status not in ['draft', 'formed']:
             return Response({"error": "Request is not in draft or formed status."}, status=status.HTTP_400_BAD_REQUEST)
@@ -66,7 +182,7 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
         if status_update not in ['completed', 'rejected']:
             return Response({"status": ["Недопустимый статус. Используйте 'completed' или 'rejected'."]}, status=status.HTTP_400_BAD_REQUEST)
 
-        moderator = User.objects.all()[0].username  
+        moderator = request.user  # Текущий пользователь
         instance.moderator = moderator
         if status_update == 'completed':
             instance.completed_at = datetime.now()
@@ -103,21 +219,22 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self, request, pk=None):
-        vmachine_request = get_object_or_404(Vmachine_Request, pk=pk)
-        request_serializer = self.get_serializer(vmachine_request)
-        request_services = Vmachine_Request_Service.objects.filter(request=vmachine_request)
-        print(request_services)
-        services_serializer = VmachineRequestServiceSerializer(request_services, many=True)
-
-        request_data = request_serializer.data
-        request_data['creator'] = request_serializer.instance.creator.username  # Заменяем объект на username
-
-
-        response_data = {
-            'rent': request_data,  
-            'vmachines': services_serializer.data  
-        }
+    
+    
+    
+    @permission_classes([IsAdmin]) 
+    def get_list(self, request, pk=None):
+        vmachine_requests = Vmachine_Request.objects.filter(creator=request.user)
+        request_serializer = self.get_serializer(vmachine_requests, many=True)
+        response_data = []
+        for vmachine_request in vmachine_requests:
+            request_services = Vmachine_Request_Service.objects.filter(request=vmachine_request)
+            services_serializer = VmachineRequestServiceSerializer(request_services, many=True)
+            response_data.append({
+                'rent': request_serializer.data,  
+                'vmachines': services_serializer.data  
+            })
+        
         return Response(response_data, status=status.HTTP_200_OK)
 
     def list(self, request):
@@ -125,10 +242,6 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)  
         return Response(serializer.data)  
 
-    def retrieve1(self, request, pk=None):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
 
     def perform_create(self, serializer):
         default_user = AuthUser.objects.first().username
@@ -204,7 +317,8 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
         instance.moderator = User.objects.first() 
         instance.save()
         return Response({"status": "Request has been rejected."})
-
+    
+    
     @action(detail=True, methods=['delete'])
     def delete_rent(self, request, pk=None):
         instance = get_object_or_404(Vmachine_Request, pk=pk)
@@ -240,7 +354,10 @@ class UserRegistration(APIView):
             return Response({"id": user.id, "username": user.username}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, pk=None):
+    
+
+@api_view(['PUT'])
+def put_user(request, pk=None):
         try:
             user = User.objects.get(pk=pk)  
         except User.DoesNotExist:
@@ -251,13 +368,15 @@ class UserRegistration(APIView):
             serializer.save()  
             return Response({"id": user.id, "username": user.username}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class VmachineServiceDetail(APIView):
+
+    
     def get(self, request, pk):
         service = get_object_or_404(Vmachine_Service, pk=pk)
         serializer = VmachineServiceSerializer(service)
         return Response(serializer.data)
-
+    
+    
     def put(self, request, pk):
         service = get_object_or_404(Vmachine_Service, pk=pk)
         serializer = VmachineServiceSerializer(service, data=request.data, partial=True)
@@ -265,13 +384,16 @@ class VmachineServiceDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
+   
     def delete(self, request, pk):
         service = get_object_or_404(Vmachine_Service, pk=pk)
         if service.url:  
             delete_file_from_minio(service.url)  
         service.delete()  
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @swagger_auto_schema(request_body=VmachineServiceSerializer)
     def post(self, request, pk):
         service = get_object_or_404(Vmachine_Service, pk=pk)
         url_file = request.FILES.get("url")
@@ -286,7 +408,12 @@ class VmachineServiceDetail(APIView):
         return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
 class VmachineServiceList(APIView):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    @method_permission_classes((IsAdmin,))
     def get(self, request):
+        
         services = Vmachine_Service.objects.filter(status='active')
         vmachine_price = request.query_params.get('vmachine_price', None)
         if vmachine_price:
@@ -307,23 +434,46 @@ class VmachineServiceList(APIView):
         }
         return Response(response_data)
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Vmachine_Request, Vmachine_Request_Service, User
-from .serializers import VmachineRequestSerializer, VmachineRequestServiceSerializer
-from django.utils import timezone
+def clone_custom_users_to_auth_user():
+    # Получаем всех пользователей из CustomUser
+    custom_users = CustomUser.objects.all()
+    User = get_user_model()
+    for custom_user in custom_users:
+        # Проверяем, существует ли пользователь с таким же username в auth_user
+        if not User.objects.filter(username=custom_user.username).exists():
+            # Создаем нового пользователя в auth_user
+            User.objects.create_user(
+                username=custom_user.username,
+                password=custom_user.password,  # Или сгенерируйте временный пароль
+                email='custom_user.email',
+                is_staff=custom_user.is_staff,
+                is_superuser=custom_user.is_superuser,
+                # Добавьте другие поля, если нужно
+            )
+        else:
+            print(f"Пользователь с именем {custom_user.username} уже существует в auth_user.")
 
-@api_view(['POST'])
+@csrf_exempt
+@swagger_auto_schema(method='post', request_body=VmachineRequestServiceSerializer)
+@api_view(["POST"])
+@permission_classes([IsAdmin])
 def create_rent_vmachine(request):
+    # Проверка, разрешен ли доступ
     request_data = request.data.copy()
-    default_user = User.objects.all()[0].username  
-    draft_request = Vmachine_Request.objects.filter(status='draft').first()
-    print(f"draft_request: {draft_request}")  
+    current_user = request.user
+
+    # Проверка на существование текущего пользователя
+    if not CustomUser.objects.filter(id=current_user.id).exists():
+        return Response({'error': 'Creator user does not exist.'}, status=400)
+
+    # Проверка наличия черновика заявки
+    draft_request = Vmachine_Request.objects.filter(creator=current_user, status='draft').first()
 
     if draft_request:
-        service_id = request_data.get('service')  
-        quantity = request_data.get('quantity', 1)  
+        # Обработка существующей заявки
+        service_id = request_data.get('service')
+        quantity = request_data.get('quantity', 1)
+        
         existing_service = Vmachine_Request_Service.objects.filter(request=draft_request, service_id=service_id).first()
         if existing_service:
             existing_service.quantity += quantity
@@ -338,9 +488,10 @@ def create_rent_vmachine(request):
                 }
             }, status=status.HTTP_200_OK)
         else:
+            # Создание новой услуги в заявке
             request_service_data = {
-                'rent': draft_request.id,  
-                'vmachine': service_id,
+                'request': draft_request.id,
+                'service': service_id,
                 'quantity': quantity,
                 'is_main': request_data.get('is_main', False)
             }
@@ -348,30 +499,32 @@ def create_rent_vmachine(request):
             if service_serializer.is_valid():
                 service_instance = service_serializer.save()
                 return Response({
-                    
                     "vmachine": service_serializer.data
                 }, status=status.HTTP_201_CREATED)
             return Response(service_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
-        request_data['creator'] = default_user  
+        # Создание новой заявки
+        request_data['creator'] = current_user.id  # Убедитесь, что используете id текущего пользователя
         request_data['created_at'] = timezone.now()
         request_data['status'] = 'draft'
+
         serializer = VmachineRequestSerializer(data=request_data)
         if serializer.is_valid():
-            request_instance = serializer.save(creator=default_user)
+            request_instance = serializer.save(creator=current_user)
             url = request.FILES.get("url")
             if url:
                 url_result = add_url(request_instance, url)
                 if isinstance(url_result, dict) and 'error' in url_result:
                     return Response(url_result, status=status.HTTP_400_BAD_REQUEST)
 
-                request_instance.url = url_result  
-                request_instance.save()  
+                request_instance.url = url_result
+                request_instance.save()
 
-            service_id = request_data.get('service')  
-            quantity = request_data.get('quantity', 1)  
+            # Обработка услуг в новой заявке
+            service_id = request_data.get('service')
+            quantity = request_data.get('quantity', 1)
             request_service_data = {
-                'rent': request_instance.id,  
+                'rent': request_instance.id,
                 'vmachine': service_id,
                 'quantity': quantity,
                 'is_main': request_data.get('is_main', False)
@@ -380,12 +533,14 @@ def create_rent_vmachine(request):
             service_serializer = VmachineRequestServiceSerializer(data=request_service_data)
             if service_serializer.is_valid():
                 service_serializer.save()
-                return Response({ 
+                return Response({
                     "vmachine": service_serializer.data
                 }, status=status.HTTP_201_CREATED)
             return Response(service_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(method='post', request_body=VmachineServiceSerializer)
 @api_view(['POST'])
 def create_vmachine(request):
     request_data = request.data.copy()
@@ -403,6 +558,7 @@ def create_vmachine(request):
         return Response(VmachineServiceSerializer(stock).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(method='post', request_body=VmachineRequestServiceSerializer)
 @api_view(['POST'])
 def add_vmachine_to_rent(request, request_id):
     try:

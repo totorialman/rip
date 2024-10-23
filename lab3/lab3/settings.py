@@ -21,13 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-pr#$ptv$j0)o!nxd8w#x-oy&nz1ba-ji@(@5^yth4lh3z_#azb'
-
+AUTH_USER_MODEL='stocks.CustomUser'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
 # Application definition
 
 INSTALLED_APPS = [
@@ -36,13 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
-
+    'stocks',
+    'django.contrib.staticfiles',  #Необходим для  swagger ui's css/js файлов (По умолчанию включен)
+    'drf_yasg',
     # DRF
     'rest_framework',
     
     # Наше приложение
-    'stocks',
+    
 ]
 
 MIDDLEWARE = [
@@ -54,6 +56,20 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+
+
+
 
 ROOT_URLCONF = 'lab3.urls'
 

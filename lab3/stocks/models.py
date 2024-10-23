@@ -1,6 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User 
-
+from django.contrib.auth.models import User, AbstractBaseUser, PermissionsMixin, Group, Permission, UserManager
+from django.conf import settings
 
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=150)
@@ -50,6 +50,33 @@ class AuthUser(models.Model):
         managed = False
         db_table = 'auth_user'
 
+class NewUserManager(UserManager):
+    def create_user(self, username, password=None, **extra_fields):
+        """
+        Создание и сохранение обычного пользователя с email и паролем.
+        """
+        if not username:
+            raise ValueError('Пользователь должен иметь email')
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    username = models.CharField(unique=True, max_length=150)
+    password = models.CharField(max_length=150, verbose_name="Пароль")
+    is_staff = models.BooleanField(default=False, verbose_name="Является ли пользователь менеджером?")
+    is_superuser = models.BooleanField(default=False, verbose_name="Является ли пользователь админом?")
+    
+    groups = models.ManyToManyField(Group, related_name="customuser_set", blank=True)
+    user_permissions = models.ManyToManyField(Permission, related_name="customuser_permissions_set", blank=True)
+
+    USERNAME_FIELD = 'username'
+    objects =  NewUserManager()
+
+    class Meta:
+        verbose_name = "пользователь"
+        verbose_name_plural = "пользователи"
 
 class AuthUserGroups(models.Model):
     user = models.ForeignKey(AuthUser, models.DO_NOTHING)
@@ -59,6 +86,8 @@ class AuthUserGroups(models.Model):
         managed = False
         db_table = 'auth_user_groups'
         unique_together = (('user', 'group'),)
+
+    
 
 
 class AuthUserUserPermissions(models.Model):
@@ -149,9 +178,9 @@ class Vmachine_Request(models.Model):
     formed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата формирования")
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения")
 
-    creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="Создатель", related_name="created_requests")
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="Создатель", related_name="created_requests")
 
-    moderator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='moderated_requests', verbose_name="Модератор")
+    moderator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='moderated_requests', verbose_name="Модератор")
 
     full_name = models.TextField(null=True, blank=True, verbose_name="ФИО")
     email = models.TextField(null=True, blank=True, verbose_name="Почта")
