@@ -540,8 +540,12 @@ def create_rent_vmachine(request):
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@swagger_auto_schema(method='post', request_body=VmachineServiceSerializer)
-@api_view(['POST'])
+BASE_URL = '5.42.99.7:9000'  # Укажите нужный адрес
+
+@csrf_exempt
+@swagger_auto_schema(method='post', request_body=VmachineRequestServiceSerializer)
+@api_view(["POST"])
+@permission_classes([IsAdmin])
 def create_vmachine(request):
     request_data = request.data.copy()
     request_data['url'] = ' '
@@ -553,7 +557,9 @@ def create_vmachine(request):
             url_result = add_url(stock, url_file)  
             if isinstance(url_result, dict) and 'error' in url_result:
                 return Response(url_result, status=status.HTTP_400_BAD_REQUEST)
-            stock.url = url_result  
+            
+            # Замените "localhost" в URL на нужный адрес
+            stock.url = url_result.replace("localhost", "5.42.99.7")  
             stock.save()
         return Response(VmachineServiceSerializer(stock).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

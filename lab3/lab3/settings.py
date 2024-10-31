@@ -27,7 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-REDIS_HOST = 'localhost'
+#REDIS_HOST = 'localhost'
+REDIS_HOST = '5.42.99.7'
 REDIS_PORT = 6379
 # Application definition
 
@@ -101,7 +102,8 @@ DATABASES = {
         'NAME': 'vmachine_sales2', # Имя вашей БД. Если вы создали черезе psql или IDE свою базу и хотите использовать его - пропишите его имя здесь
         'USER': 'admin',
         'PASSWORD': 'admin',
-        'HOST': 'localhost',
+        #'HOST': 'localhost',
+        'HOST': '5.42.99.7',
         'PORT': 7474, # Стандартный порт PostgreSQL
         
     }
@@ -154,5 +156,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AWS_STORAGE_BUCKET_NAME = 'logo'
 AWS_ACCESS_KEY_ID = 'minio'
 AWS_SECRET_ACCESS_KEY = 'minio124'
-AWS_S3_ENDPOINT_URL = 'localhost:9000'
+#AWS_S3_ENDPOINT_URL = 'localhost:9000'
+AWS_S3_ENDPOINT_URL = '5.42.99.7:9000'
+MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
+
 MINIO_USE_SSL = False
