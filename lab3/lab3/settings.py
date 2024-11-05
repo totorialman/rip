@@ -85,7 +85,7 @@ DATABASES = {
         'NAME': 'vmachine_sales2', # Имя вашей БД. Если вы создали черезе psql или IDE свою базу и хотите использовать его - пропишите его имя здесь
         'USER': 'admin',
         'PASSWORD': 'admin',
-        'HOST': 'localhost',
+        'HOST': '91.184.243.246',
         'PORT': 7474, # Стандартный порт PostgreSQL
         
     }
@@ -138,5 +138,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AWS_STORAGE_BUCKET_NAME = 'logo'
 AWS_ACCESS_KEY_ID = 'minio'
 AWS_SECRET_ACCESS_KEY = 'minio124'
-AWS_S3_ENDPOINT_URL = 'localhost:9000'
+AWS_S3_ENDPOINT_URL = '91.184.243.246:9000'
 MINIO_USE_SSL = False
