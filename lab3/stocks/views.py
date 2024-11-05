@@ -15,6 +15,8 @@ from .serializers import VmachineRequestSerializer, VmachineRequestServiceSerial
 from django.utils import timezone
 from datetime import datetime
 
+
+
 class VmachineRequestViewSet(viewsets.ModelViewSet):
     queryset = Vmachine_Request.objects.exclude(status='deleted')
     serializer_class = VmachineRequestSerializer
@@ -391,7 +393,8 @@ def create_service(request):
             url_result = add_url(stock, url_file)  
             if isinstance(url_result, dict) and 'error' in url_result:
                 return Response(url_result, status=status.HTTP_400_BAD_REQUEST)
-            stock.url = url_result  
+            
+            stock.url = url_result.replace("localhost", "5.42.99.7") 
             stock.save()
         return Response(VmachineServiceSerializer(stock).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
