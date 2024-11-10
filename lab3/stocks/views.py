@@ -399,6 +399,7 @@ def create_vmachine(request):
             if isinstance(url_result, dict) and 'error' in url_result:
                 return Response(url_result, status=status.HTTP_400_BAD_REQUEST)
             stock.url = url_result  
+            stock.url = url_result.replace("localhost", "91.184.243.246")
             stock.save()
         return Response(VmachineServiceSerializer(stock).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
