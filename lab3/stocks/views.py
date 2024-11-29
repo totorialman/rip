@@ -96,9 +96,9 @@ class UserViewSet(viewsets.ModelViewSet):
     """Класс, описывающий методы работы с пользователями
     Осуществляет связь с таблицей пользователей в базе данных
     """
-    queryset = CustomUser.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserSerializer
-    model_class = CustomUser
+    model_class = User
 
     def get_permissions(self):
         if self.action in ['create']:
@@ -108,8 +108,8 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [IsAdmin]
         return [permission() for permission in permission_classes]
-
     
+    @permission_classes([AllowAny]) 
     def create(self, request):
         """
         Функция регистрации новых пользователей
@@ -436,7 +436,7 @@ class VmachineServiceList(APIView):
 
 def clone_custom_users_to_auth_user():
     # Получаем всех пользователей из CustomUser
-    custom_users = CustomUser.objects.all()
+    custom_users = User.objects.all()
     User = get_user_model()
     for custom_user in custom_users:
         # Проверяем, существует ли пользователь с таким же username в auth_user
@@ -463,7 +463,7 @@ def create_rent_vmachine(request):
     current_user = request.user
 
     # Проверка на существование текущего пользователя
-    if not CustomUser.objects.filter(id=current_user.id).exists():
+    if not User.objects.filter(id=current_user.id).exists():
         return Response({'error': 'Creator user does not exist.'}, status=400)
 
     # Проверка наличия черновика заявки
@@ -564,6 +564,7 @@ def create_vmachine(request):
         return Response(VmachineServiceSerializer(stock).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@csrf_exempt
 @swagger_auto_schema(method='post', request_body=VmachineRequestServiceSerializer)
 @api_view(['POST'])
 def add_vmachine_to_rent(request, request_id):

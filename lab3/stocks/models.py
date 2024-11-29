@@ -178,9 +178,9 @@ class Vmachine_Request(models.Model):
     formed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата формирования")
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения")
 
-    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="Создатель", related_name="created_requests")
+    creator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, verbose_name="Создатель", related_name="created_requests")
 
-    moderator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='moderated_requests', verbose_name="Модератор")
+    moderator = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='moderated_requests', verbose_name="Модератор")
 
     full_name = models.TextField(null=True, blank=True, verbose_name="ФИО")
     email = models.TextField(null=True, blank=True, verbose_name="Почта")

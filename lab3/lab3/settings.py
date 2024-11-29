@@ -21,14 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-pr#$ptv$j0)o!nxd8w#x-oy&nz1ba-ji@(@5^yth4lh3z_#azb'
-AUTH_USER_MODEL='stocks.CustomUser'
+#AUTH_USER_MODEL='stocks.CustomUser'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
 #REDIS_HOST = 'localhost'
-REDIS_HOST = '5.42.99.7'
+REDIS_HOST = '91.184.243.246'
 REDIS_PORT = 6379
 # Application definition
 
@@ -99,11 +99,11 @@ WSGI_APPLICATION = 'lab3.wsgi.application'
 DATABASES = {
      'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'vmachine_sales2', # Имя вашей БД. Если вы создали черезе psql или IDE свою базу и хотите использовать его - пропишите его имя здесь
+        'NAME': 'vmachine_sales_lab7', # Имя вашей БД. Если вы создали черезе psql или IDE свою базу и хотите использовать его - пропишите его имя здесь
         'USER': 'admin',
         'PASSWORD': 'admin',
         #'HOST': 'localhost',
-        'HOST': '5.42.99.7',
+        'HOST': '91.184.243.246',
         'PORT': 7474, # Стандартный порт PostgreSQL
         
     }
@@ -157,7 +157,7 @@ AWS_STORAGE_BUCKET_NAME = 'logo'
 AWS_ACCESS_KEY_ID = 'minio'
 AWS_SECRET_ACCESS_KEY = 'minio124'
 #AWS_S3_ENDPOINT_URL = 'localhost:9000'
-AWS_S3_ENDPOINT_URL = '5.42.99.7:9000'
+AWS_S3_ENDPOINT_URL = '91.184.243.246:9000'
 MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
 
 MINIO_USE_SSL = False
