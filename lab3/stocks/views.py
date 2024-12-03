@@ -16,6 +16,7 @@ from .serializers import VmachineRequestSerializer, VmachineRequestServiceSerial
 from django.utils import timezone
 from datetime import datetime
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from django.conf import settings
 from django.db import transaction
 import redis
@@ -411,9 +412,49 @@ class VmachineServiceList(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    @method_permission_classes((IsAdmin,))
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'vmachine_price',
+                openapi.IN_QUERY,
+                description="Filter virtual machines by price. Only services with price <= vmachine_price will be returned.",
+                type=openapi.TYPE_NUMBER,
+                required=False
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'vmachines': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                'price': openapi.Schema(type=openapi.TYPE_NUMBER),
+                                # Дополните схему под ваши поля сериализатора
+                            }
+                        ),
+                        description="List of active virtual machine services"
+                    ),
+                    'rent_id': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description="ID of the first draft request, if any"
+                    ),
+                    'vmachine_count': openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description="Count of virtual machines in the draft request"
+                    ),
+                },
+                description="Response with filtered virtual machines and related data"
+            ),
+            400: "Invalid price value"
+        }
+    )
+    @method_permission_classes((AllowAny,))
     def get(self, request):
-        
         services = Vmachine_Service.objects.filter(status='active')
         vmachine_price = request.query_params.get('vmachine_price', None)
         if vmachine_price:
