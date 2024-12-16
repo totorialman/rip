@@ -66,7 +66,6 @@ def login_view(request):
         response = HttpResponse("{'status': 'ok'}")
         response.set_cookie("session_id", random_key)
 
-        
 
         return response
     else:
@@ -110,6 +109,7 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAdmin]
         return [permission() for permission in permission_classes]
     
+    @csrf_exempt
     @permission_classes([AllowAny]) 
     def create(self, request):
         """
@@ -196,21 +196,36 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['put'])
-    def update_status(self, request, pk=None):
-        instance = get_object_or_404(Vmachine_Request, pk=pk)
-        if instance.status != 'draft':
-            return Response({"error": "Request is not in draft status."}, status=status.HTTP_400_BAD_REQUEST)
-        full_name = instance.full_name
-        email = instance.email
-        from_date = instance.from_date
+    def update_status(self, request):
+        # Находим первую заявку черновик, созданную текущим пользователем
+        vmachine_request = Vmachine_Request.objects.filter(
+            creator=request.user,
+            status='draft'
+        ).first()
+
+        # Если заявка не найдена, возвращаем ошибку
+        if not vmachine_request:
+            return Response({"error": "Draft request not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Проверяем, что полные имя, email и from_date пользователя заполнены
+        full_name = request.data.get('full_name')
+        email = request.data.get('email')
+        from_date = request.data.get('from_date')
+
         if not full_name or not email or not from_date:
             return Response({"error": "Full name, email, and from_date are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        instance.status = 'formed'
-        instance.formed_at = timezone.now()
-        instance.save()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)  
+        # Обновляем статус заявки
+        vmachine_request.full_name = full_name
+        vmachine_request.email = email
+        vmachine_request.from_date = from_date
+        vmachine_request.status = 'formed'
+        vmachine_request.formed_at = timezone.now()
+        vmachine_request.save()
+
+        # Сериализация обновленной заявки и возвращение данных
+        serializer = self.get_serializer(vmachine_request)
+        return Response(serializer.data)
     
     def update(self, request, pk=None):
         instance = Vmachine_Request.objects.get(pk=pk)  
@@ -225,7 +240,7 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
     
     @permission_classes([IsAdmin]) 
     def get_list(self, request, pk=None):
-        vmachine_requests = Vmachine_Request.objects.filter(creator=request.user)
+        vmachine_requests = Vmachine_Request.objects.filter(creator=request.user,status='draft')
         request_serializer = self.get_serializer(vmachine_requests, many=True)
         response_data = []
         for vmachine_request in vmachine_requests:
@@ -235,6 +250,18 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
                 'rent': request_serializer.data,  
                 'vmachines': services_serializer.data  
             })
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+    @permission_classes([IsAdmin]) 
+    def get_list1(self, request, pk=None):
+        vmachine_requests = Vmachine_Request.objects.filter(creator=request.user).exclude(status='draft')
+        request_serializer = self.get_serializer(vmachine_requests, many=True)
+        response_data = []
+        response_data.append({
+                'rent': request_serializer.data,   
+            })
+        
         
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -292,14 +319,25 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
         return queryset
 
     @action(detail=True, methods=['put'])
-    def form(self, request, pk=None):
-        instance = self.get_object()
-        if not instance.full_name or not instance.email:
+    def form(self, request):
+        # Находим первую заявку черновик, созданную текущим пользователем
+        vmachine_request = Vmachine_Request.objects.filter(
+            creator=request.user,
+            status='draft'
+        ).first()
+
+        if not vmachine_request:
+            return Response({"error": "Draft request not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Проверяем, что полные имя и email пользователя заполнены
+        if not vmachine_request.full_name or not vmachine_request.email:
             return Response({"error": "Full name and email are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        instance.status = 'formed'
-        instance.formed_at = timezone.now()
-        instance.save()
+        # Обновляем статус заявки
+        vmachine_request.status = 'formed'
+        vmachine_request.formed_at = timezone.now()
+        vmachine_request.save()
+
         return Response({"status": "Request has been formed."})
 
     @action(detail=True, methods=['put'])
@@ -321,13 +359,23 @@ class VmachineRequestViewSet(viewsets.ModelViewSet):
     
     
     @action(detail=True, methods=['delete'])
-    def delete_rent(self, request, pk=None):
-        instance = get_object_or_404(Vmachine_Request, pk=pk)
-        instance.status = 'deleted'
-        instance.formed_at = timezone.now()
-        instance.save()
-        return Response({"detail": "Request has been deleted."}, status=status.HTTP_204_NO_CONTENT)
+    def delete_rent(self, request):
+         # Находим первую заявку черновик для текущего пользователя
+        vmachine_request = Vmachine_Request.objects.filter(
+            creator=request.user,
+            status='draft'
+        ).first()
 
+        if not vmachine_request:
+            return Response({"error": "Draft request not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Изменяем статус заявки на 'deleted' и сохраняем текущую дату в formed_at
+        vmachine_request.status = 'deleted'
+        vmachine_request.formed_at = timezone.now()
+        vmachine_request.save()
+
+        return Response({"detail": "Request has been deleted."}, status=status.HTTP_204_NO_CONTENT)
+    
 class VmachineRequestServiceViewSet(viewsets.ModelViewSet):
     queryset = Vmachine_Request_Service.objects.all()
     serializer_class = VmachineRequestServiceSerializer
@@ -356,19 +404,28 @@ class UserRegistration(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
+from django.contrib.auth.hashers import make_password
 
 @api_view(['PUT'])
 def put_user(request, pk=None):
-        try:
-            user = User.objects.get(pk=pk)  
-        except User.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        user = User.objects.get(username=pk)  # Ищем пользователя по username
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = UserSerializer(user, data=request.data, partial=True)  
-        if serializer.is_valid():
-            serializer.save()  
-            return Response({"id": user.id, "username": user.username}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Если в запросе пришел новый пароль, его нужно захешировать
+    if 'password' in request.data:
+        request.data['password'] = make_password(request.data['password'])  # Хэшируем новый пароль
+
+    serializer = UserSerializer(user, data=request.data, partial=True)
+    
+    if serializer.is_valid():
+        serializer.save()  # Сохраняем пользователя с обновленным паролем
+        return Response({"id": user.id, "username": user.username}, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class VmachineServiceDetail(APIView):
 
     
@@ -605,33 +662,72 @@ def create_vmachine(request):
         return Response(VmachineServiceSerializer(stock).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@csrf_exempt
+
 @swagger_auto_schema(method='post', request_body=VmachineRequestServiceSerializer)
 @api_view(['POST'])
-def add_vmachine_to_rent(request, request_id):
+@permission_classes([AllowAny])
+def add_vmachine_to_rent(request):
     try:
-        vmachine_request = Vmachine_Request.objects.get(id=request_id)
-    except Vmachine_Request.DoesNotExist:
-        return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
-    service_id = request.data.get('service_id')
-    quantity = request.data.get('quantity', 1)
-    is_main = request.data.get('is_main', False)
-    try:
-        service = Vmachine_Service.objects.get(id=service_id)
-    except Vmachine_Service.DoesNotExist:
-        return Response({"error": "Service not found"}, status=status.HTTP_404_NOT_FOUND)
+        # Находим первую заявку черновик, созданную текущим пользователем
+        vmachine_request = Vmachine_Request.objects.filter(
+            creator=request.user,
+            status='draft'
+        ).first()
 
-    request_service_data = {
-        'request': vmachine_request.id,
-        'service': service.id,
-        'quantity': quantity,
-        'is_main': is_main
-    }
+        # Если заявки в статусе "draft" нет, создаем новую заявку
+        if not vmachine_request:
+            vmachine_request = Vmachine_Request.objects.create(
+                creator=request.user,
+                status='draft',
+                # Можно добавить дополнительные параметры, если они нужны
+            )
+
+        # Получаем данные из тела запроса
+        service_id = request.data.get('service_id')
+        quantity = request.data.get('quantity', 1)  # Значение по умолчанию 1
+        is_main = request.data.get('is_main', False)
+
+        # Проверяем существование услуги
+        try:
+            service_id = int(service_id)
+        except (ValueError, TypeError):
+            return Response({"error": "Invalid service ID"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            service = Vmachine_Service.objects.get(id=service_id)
+        except Vmachine_Service.DoesNotExist:
+            return Response({"error": "Service not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Проверяем, существует ли уже такой товар в черновике
+        existing_service = Vmachine_Request_Service.objects.filter(
+            request=vmachine_request,
+            service_id=service_id  # Проверка по service_id
+        ).first()
+
+        if existing_service:
+            # Если товар уже существует, обновляем его количество
+            existing_service.quantity += quantity
+
+            # Если количество стало 0, удаляем товар из заявки
+            if existing_service.quantity <= 0:
+                existing_service.delete()
+                return Response({"message": "Service removed from request"}, status=status.HTTP_200_OK)
+
+            existing_service.save()
+            return Response({"message": "Quantity updated", "data": VmachineRequestServiceSerializer(existing_service).data}, status=status.HTTP_200_OK)
+        else:
+            # Если товара нет, создаем новую запись
+            request_service_data = {
+                'request': vmachine_request.id,
+                'service': service.id,
+                'quantity': quantity,
+                'is_main': is_main
+            }
+            serializer = VmachineRequestServiceSerializer(data=request_service_data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    serializer = VmachineRequestServiceSerializer(data=request_service_data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -47,7 +47,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path("register/", UserRegistration.as_view()),
-    path("register/<int:pk>/", put_user),
+    path("register/<str:pk>/", put_user),
     path("vmachines/", VmachineServiceList.as_view()),
     path("create-rent/", create_rent_vmachine),
     path("vmachine/", create_vmachine),
@@ -57,19 +57,20 @@ urlpatterns = [
         VmachineServiceDetail.as_view(),
     ),
     path("rent-list/", VmachineRequestViewSet.as_view({"get": "get_list"})),
+    path("rent-list-all/", VmachineRequestViewSet.as_view({"get": "get_list1"})),
     path(
-        "rent-list/<int:request_id>/",
+        "rent-list1/",
         add_vmachine_to_rent,
     ),
     path("", include(router.urls)),
     path(
-        "rental-list/<int:pk>/",
+        "rental-list/",
         VmachineRequestViewSet.as_view(
             {"get": "retrieve", "put": "update", "delete": "delete_rent"}
         ),
     ),
     path(
-        "rent-formed/<int:pk>/",
+        "rent-formed/",
         VmachineRequestViewSet.as_view(
             {
                 "put": "update_status",

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     # DRF
     'rest_framework',
+    'corsheaders',
     
     # Наше приложение
     
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -151,6 +153,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',  # Разрешите ваш фронтенд
+]
+
 
 
 AWS_STORAGE_BUCKET_NAME = 'logo'
